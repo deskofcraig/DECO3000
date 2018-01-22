@@ -1,8 +1,6 @@
 // This #include statement was automatically added by the Particle IDE.
 #include <neopixel.h>
 
-
-
 #define PIXEL_PIN D0
 #define PIXEL_COUNT 9
 #define PIXEL_TYPE WS2812B
@@ -27,7 +25,6 @@ int soilPower = D2;
 int rate;
 
 // rating states
-
 int state1 = 0000; //      < 899
 int state2 = 1300; // 900 < 1699
 int state3 = 2000; // 1700 < 2599
@@ -46,7 +43,7 @@ int proxThreshold = 1000;
 int readProx;
 
 // interval timer
-int minute = 1;
+int minute = 15;
 const long readingInterval = 60000 * minute;
 unsigned long previousMillis = 0;
 
@@ -57,7 +54,6 @@ uint32_t red = strip.Color(0,255,0);
 uint32_t blue = strip.Color(0,0,255);
 uint32_t yellow = strip.Color(255,255,0);
 uint32_t off = strip.Color(0,0,0);
-
 
 
 void setup() {
@@ -73,12 +69,7 @@ void setup() {
     //soil moisture sensor initiate
     pinMode(soilPower, OUTPUT);
     digitalWrite(soilPower, LOW);
-
-//     readSoil();
-//     rateSoil(soilVal);
-//     result(soilVal, count, rate);
 }
-
 
 
 void loop() {
@@ -86,10 +77,7 @@ void loop() {
     proxDetect();
 
     checkSoil();
-
-
 }
-
 
 
 void checkSoil() {
@@ -101,8 +89,11 @@ void checkSoil() {
         result(soilVal, count, rate);
         count = 0;
         sendDataToCCDB(String(soilVal),"int", "moisture_level");
+        sendDataToCCDB(String(rate), "int", "moisture_rating");
+        sendDataToCCDB(String(count), "int", "activation_count");
     }
 }
+
 
 void sendDataToCCDB(String readingvalue, String readingdatatype, String readingvaluedescription)
 {
@@ -120,8 +111,6 @@ void proxDetect() {
         sendFeedback(soilVal);
         Particle.publish("Detection Read", String(soilVal));
         count++;
-        // delay(5000);
-        // clearStrip();
     }
 }
 
