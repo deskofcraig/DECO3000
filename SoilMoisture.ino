@@ -8,11 +8,7 @@
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_PIN);
 
-// int i;
-// int t;
 int count = 0;
-
-// int wait = 500;
 
 int pixels = PIXEL_COUNT;
 
@@ -20,6 +16,8 @@ int pixels = PIXEL_COUNT;
 int soilVal = 0; // maxx value = 4095
 int soilPin1 = A0;
 int soilPower = D2;
+
+int pixelPower = D4;
 
 // number of pixels lit up
 int rate;
@@ -43,9 +41,11 @@ int proxThreshold = 1000;
 int readProx;
 
 // interval timer
-int minute = 15;
+int minute = 10;
 const long readingInterval = 60000 * minute;
 unsigned long previousMillis = 0;
+
+bool lock = false;
 
 // colours
 // uint32_t = strip.Color();
@@ -69,14 +69,18 @@ void setup() {
     //soil moisture sensor initiate
     pinMode(soilPower, OUTPUT);
     digitalWrite(soilPower, LOW);
+    
+    pinMode(pixelPower, OUTPUT);
+    digitalWrite(pixelPower, LOW);
 }
 
 
 void loop() {
-
+    
+    checkSoil();
+    
     proxDetect();
 
-    checkSoil();
 }
 
 
@@ -108,9 +112,13 @@ void proxDetect() {
     readProx = analogRead(PROX_SENS);
     if (readProx > proxThreshold) {
         readSoil();
+        digitalWrite(pixelPower, HIGH);
         sendFeedback(soilVal);
         Particle.publish("Detection Read", String(soilVal));
         count++;
+        delay(5000);
+        digitalWrite(pixelPower, LOW);
+        clearStrip();
     }
 }
 
@@ -151,11 +159,11 @@ void sendFeedback(int reading) {
 
     pixels = PIXEL_COUNT;
 
-
-    for (int i = 0; i < PIXEL_COUNT; i++) {
-        strip.setPixelColor(i, 0,0,0);
+    for (int k = 0; k < PIXEL_COUNT; k++) {
+        strip.setPixelColor(k, 0,0,0);
         strip.show();
     }
+    
     if (reading >= state9) {
         setStripColor(blue, pixels);
     } else if (reading > state8) {
@@ -185,8 +193,6 @@ void sendFeedback(int reading) {
         pixels = pixels - 8;
         setStripColor(red, pixels);
     }
-    delay(5000);
-    clearStrip();
 }
 
 void result(int read, int counter, int rate) {
@@ -196,15 +202,15 @@ void result(int read, int counter, int rate) {
 }
 
 void setStripColor(uint32_t colour, int lit) {
-    for (int i = 0; i < lit; i++) {
-        strip.setPixelColor(i, colour);
+    for (int h = 0; h < lit; h++) {
+        strip.setPixelColor(h, colour);
     }
     strip.show();
 }
 
 void clearStrip() {
-    for (int i = 0; i < PIXEL_COUNT; i++) {
-        strip.setPixelColor(i, off);
+    for (int j = 0; j < PIXEL_COUNT; j++) {
+        strip.setPixelColor(j, off);
     }
     strip.show();
 }
